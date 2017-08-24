@@ -13,7 +13,7 @@ app.post('/upload', (req, res) => {
     form.parse(req, function (err, fields, files) {
         let oldPath = files.file[0].path;
         let newPath = path.join('./Public/' + fields.path[0] + files.file[0].originalFilename);
-        if(!fs.existsSync(newPath)) {
+        if (!fs.existsSync(newPath)) {
             fs.rename(oldPath, newPath, (err) => {
                 if (err) throw err;
                 res.status(201);
@@ -23,8 +23,26 @@ app.post('/upload', (req, res) => {
             res.status(200);
             res.send();
         }
-        
+
     });
+});
+
+app.post('/list', (req, res) => {
+    let dir = path.join('./Public/' + req.body.path);
+    var body = {
+        folders: [],
+        files: []
+    };
+    let files = fs.readdirSync(dir);
+    for (let i = 0; i < files.length; i++) {
+        if (fs.lstatSync(dir + '/' + files[i]).isDirectory()) {
+            body.folders.push(files[i]);
+        } else {
+            body.files.push(files[i]);
+        }
+    }
+    res.status(200);
+    res.json(body);
 });
 
 app.post('/create', (req, res) => {
