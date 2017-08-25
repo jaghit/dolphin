@@ -14,6 +14,10 @@ app.use(bodyParser.json());
 app.use(cors());
 
 app.post('/new', (req, res) => {
+    let dd = new Date();
+    let logTime = '[' + dd.getHours() + ':' + dd.getMinutes() + ':' + dd.getSeconds() + '] ';
+    console.log(logTime + 'New request to /new endpoint');
+
     let dir = path.join('./Public/' + req.body.name);
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir);
@@ -21,11 +25,15 @@ app.post('/new', (req, res) => {
         res.json({ name: req.body.name, exists: false });
     } else {
         res.status(200);
-        res.json({ name: req.body.name, exists: true });
+        res.send('{ name: ' + req.body.name + ', exists: false }');
     }
 });
 
 app.post('/list', (req, res) => {
+    let dd = new Date();
+    let logTime = '[' + dd.getHours() + ':' + dd.getMinutes() + ':' + dd.getSeconds() + '] ';
+    console.log(logTime + 'New request to /list endpoint');
+
     let dir = path.join('./Public/' + req.body.path);
     var body = {
         folders: [],
@@ -44,6 +52,10 @@ app.post('/list', (req, res) => {
 });
 
 app.post('/upload', (req, res) => {
+    let dd = new Date();
+    let logTime = '[' + dd.getHours() + ':' + dd.getMinutes() + ':' + dd.getSeconds() + '] ';
+    console.log(logTime + 'New request to /upload endpoint');
+
     var form = new multiparty.Form();
     form.parse(req, function (err, fields, files) {
         let oldPath = files.file[0].path;
@@ -63,6 +75,10 @@ app.post('/upload', (req, res) => {
 });
 
 app.post('/create', (req, res) => {
+    let dd = new Date();
+    let logTime = '[' + dd.getHours() + ':' + dd.getMinutes() + ':' + dd.getSeconds() + '] ';
+    console.log(logTime + 'New request to /create endpoint');
+
     let dir = path.join('./Public/' + req.body.path + req.body.name);
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir);
