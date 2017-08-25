@@ -20,6 +20,9 @@ function log(req, point) {
     let address = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     let log = '\n[ TIMESTAMP ] ' + timestamp + '\n[ ENDPOINT ] Incoming request to ' + point + ' \n[ USERAGENT ] ' + agent + '\n[ IP ADDRESS ] ' + address;
     console.log(log);
+    fs.appendFile('log.txt', log + '\n', function (err) {
+        if (err) throw err;
+    });
 }
 
 app.post('/new', (req, res) => {
