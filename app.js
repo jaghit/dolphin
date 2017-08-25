@@ -1,22 +1,27 @@
+'use strict';
+
 const express = require('express');
 const app = express();
 
 const multiparty = require('multiparty');
 const fs = require('fs');
 const path = require('path');
+const cors = require('cors');
 
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
+
+app.use(cors());
 
 app.post('/new', (req, res) => {
     let dir = path.join('./Public/' + req.body.name);
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir);
         res.status(201);
-        res.json({name: req.body.name, exists: false});
+        res.json({ name: req.body.name, exists: false });
     } else {
         res.status(200);
-        res.json({name: req.body.name, exists: true});
+        res.json({ name: req.body.name, exists: true });
     }
 });
 
@@ -47,11 +52,11 @@ app.post('/upload', (req, res) => {
             fs.rename(oldPath, newPath, (err) => {
                 if (err) throw err;
                 res.status(201);
-                res.json({file: files.file[0].originalFilename, exists: false});
+                res.json({ file: files.file[0].originalFilename, exists: false });
             });
         } else {
             res.status(200);
-            res.json({file: files.file[0].originalFilename, exists: true});
+            res.json({ file: files.file[0].originalFilename, exists: true });
         }
 
     });
@@ -62,13 +67,13 @@ app.post('/create', (req, res) => {
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir);
         res.status(201);
-        res.json({folder: req.body.name, exists: false});
+        res.json({ folder: req.body.name, exists: false });
     } else {
         res.status(200);
-        res.json({folder: req.body.name, exists: true});
+        res.json({ folder: req.body.name, exists: true });
     }
 });
 
 app.listen(8080, () => {
-    console.log('App listening on port 8080!');
+    console.log('CORS-enabled web server listening on port 8080!');
 })
