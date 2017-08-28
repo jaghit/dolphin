@@ -32,10 +32,10 @@ app.post('/new', (req, res) => {
     if (!fs.existsSync(_path)) {
         fs.mkdirSync(_path);
         res.status(201);
-        res.json({ exist: false, create: true });
+        res.json({ exists: false, create: true });
     } else {
         res.status(200);
-        res.json({ exist: true, create: false });
+        res.json({ exists: true, create: false });
     }
 });
 
@@ -44,6 +44,7 @@ app.post('/list', (req, res) => {
 
     let _path = path.join('./Public/' + req.body.path + '/');
     let body = {
+        exists: true,
         folders: [],
         files: []
     };
@@ -60,7 +61,7 @@ app.post('/list', (req, res) => {
         res.json(body);
     } else {
         res.status(404);
-        res.json({ exist: false });
+        res.json({ exists: false });
     }
 
 });
@@ -70,23 +71,27 @@ app.post('/upload', (req, res) => {
 
     var form = new multiparty.Form();
     form.parse(req, function (err, fields, files) {
-        let oldPath = files.file[0].path;
-        let newPath = path.join('./Public/' + fields.path[0] + '/');
-        if (fs.existsSync(newPath)) {
-            newPath = path.join(newPath + '/' + files.file[0].originalFilename);
-            if (!fs.existsSync(newPath)) {
-                fs.rename(oldPath, newPath, (err) => {
-                    if (err) throw err;
-                    res.status(201);
-                    res.json({ exist: false, create: true });
-                });
+        try {
+            let oldPath = files.file[0].path;
+            let newPath = path.join('./Public/' + fields.path[0] + '/');
+            if (fs.existsSync(newPath)) {
+                newPath = path.join(newPath + '/' + files.file[0].originalFilename);
+                if (!fs.existsSync(newPath)) {
+                    fs.rename(oldPath, newPath, (err) => {
+                        if (err) throw err;
+                        res.status(201);
+                        res.json({ exists: false, create: true });
+                    });
+                } else {
+                    res.status(200);
+                    res.json({ exists: true, create: false });
+                }
             } else {
-                res.status(200);
-                res.json({ exist: true, create: false });
+                res.status(404);
+                res.json({ exists: false });
             }
-        } else {
-            res.status(404);
-            res.json({ exists: false });
+        } catch (err) {
+            console.log('\n' + err + '\nFields: ' + fields.name + '\nFiles: ' + files.name);
         }
     });
 });
@@ -100,14 +105,14 @@ app.post('/create', (req, res) => {
         if (!fs.existsSync(_path)) {
             fs.mkdirSync(_path);
             res.status(201);
-            res.json({ exist: false, create: true });
+            res.json({ exists: false, create: true });
         } else {
             res.status(200);
-            res.json({ exist: true, create: false });
+            res.json({ exists: true, create: false });
         }
     } else {
         res.status(404);
-        res.json({ exist: false, create: false });
+        res.json({ exists: false, create: false });
     }
 });
 
@@ -117,7 +122,7 @@ app.post('/delete', (req, res) => {
     let _path = path.join('./Public/' + req.body.path);
     let deleted = removeRecursive(_path);
     res.status(200);
-    res.json({ exist: deleted, delete: deleted });
+    res.json({ exists: deleted, delete: deleted });
 });
 
 function removeRecursive(_path) {
