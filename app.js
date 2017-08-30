@@ -116,26 +116,76 @@ app.post('/create', (req, res) => {
     }
 });
 
+app.post('/download', (req, res) => {
+    log(req, '/Download');
+
+    let _path = path.join('./Public/' + req.body.path);
+    // DO NOT DELETE OR REMOVE :P
+    // let fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+    let fullUrl = req.protocol + '://' + req.get('host') + '/Public' + req.body.path;
+    if (fs.existsSync(_path)) {
+        res.status(200);
+        res.json({ exists: true, file: fullUrl });
+    } else {
+        res.status(404);
+        res.json({ exists: false });
+    }
+});
+
+app.post('/rename', (req, res) => {
+    log(req, '/Rename');
+
+    let _path = path.join('./Public/' + req.body.path);
+    if (fs.existsSync(_path)) {
+        let splitPath = req.body.path.split('/');
+        splitPath[splitPath.length - 1] = req.body.name;
+        let newPath = './Public';
+        for (let i = 1; i < splitPath.length; i++) {
+            newPath += '/' + splitPath[i];
+        }
+        fs.rename(_path, newPath, (err) => {
+            if (err) throw err;
+            res.status(200);
+            res.json({ exists: true, rename: true });
+        });
+    } else {
+        res.status(404);
+        res.json({ exists: false, create: false });
+    }
+});
+
 app.post('/delete', (req, res) => {
     log(req, '/Delete');
 
     let _path = path.join('./Public/' + req.body.path);
-    let deleted = removeRecursive(_path);
-    res.status(200);
-    res.json({ exists: deleted, delete: deleted });
+    let deleted = false;
+
+    if (fs.existsSync(_path)) {
+        if (fs.lstatSync(_path).isDirectory()) {
+            deleted = removeRecursive(_path);
+        } else {
+            fs.unlinkSync(_path);
+            deleted = true;
+        }
+        res.status(200);
+        res.json({ exists: deleted, delete: deleted });
+    } else {
+        res.status(404);
+        res.json({ exists: deleted, delete: deleted });
+    }
 });
 
-function removeRecursive(_path) {
-    if (fs.existsSync(_path)) {
-        fs.readdirSync(_path).forEach(function (file, index) {
-            var curPath = _path + "/" + file;
+function removeRecursive(path) {
+    if (fs.existsSync(path)) {
+        fs.readdirSync(path).forEach(function (file, index) {
+            var curPath = path + "/" + file;
             if (fs.lstatSync(curPath).isDirectory()) {
                 removeRecursive(curPath);
             } else {
                 fs.unlinkSync(curPath);
             }
         });
-        fs.rmdirSync(_path);
+        fs.rmdirSync(path);
         return true;
     } else {
         return false;
