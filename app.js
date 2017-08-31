@@ -18,7 +18,7 @@ function log(req, point) {
     let timestamp = new Date();
     let agent = req.headers['user-agent'];
     let address = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    let log = '\n[ TIMESTAMP ] ' + timestamp + '\n[ ENDPOINT ] Incoming request to ' + point + ' \n[ USERAGENT ] ' + agent + '\n[ IP ADDRESS ] ' + address;
+    let log = '\n[ TIMESTAMP ] ' + timestamp + ' [ IP ADDRESS ] ' + address + ' [ ENDPOINT ] Incoming request to ' + point + ' \n[ USERAGENT ] ' + agent;
     console.log(log);
     fs.appendFile('log.txt', log + '\n', function (err) {
         if (err) throw err;
@@ -27,81 +27,8 @@ function log(req, point) {
 
 app.post('/new', (req, res) => {
     log(req, '/New');
-
-    let _path = path.join('./Public/' + req.body.name + '/');
-    if (!fs.existsSync(_path)) {
-        fs.mkdirSync(_path);
-        res.status(201);
-        res.json({ exists: false, create: true });
-    } else {
-        res.status(200);
-        res.json({ exists: true, create: false });
-    }
-});
-
-app.post('/list', (req, res) => {
-    log(req, '/List');
-
-    let _path = path.join('./Public/' + req.body.path + '/');
-    let body = {
-        exists: true,
-        folders: [],
-        files: []
-    };
-    if (fs.existsSync(_path)) {
-        let files = fs.readdirSync(_path);
-        for (let i = 0; i < files.length; i++) {
-            if (fs.lstatSync(_path + '/' + files[i]).isDirectory()) {
-                body.folders.push(files[i]);
-            } else {
-                body.files.push(files[i]);
-            }
-        }
-        res.status(200);
-        res.json(body);
-    } else {
-        res.status(404);
-        res.json({ exists: false });
-    }
-
-});
-
-app.post('/upload', (req, res) => {
-    log(req, '/Upload');
-
-    var form = new multiparty.Form();
-    form.parse(req, function (err, fields, files) {
-        try {
-            let oldPath = files.file[0].path;
-            let newPath = path.join('./Public/' + fields.path[0] + '/');
-            if (fs.existsSync(newPath)) {
-                newPath = path.join(newPath + '/' + files.file[0].originalFilename);
-                if (!fs.existsSync(newPath)) {
-                    fs.rename(oldPath, newPath, (err) => {
-                        if (err) throw err;
-                        res.status(201);
-                        res.json({ exists: false, create: true });
-                    });
-                } else {
-                    res.status(200);
-                    res.json({ exists: true, create: false });
-                }
-            } else {
-                res.status(404);
-                res.json({ exists: false });
-            }
-        } catch (err) {
-            console.log('\n' + err + '\nFields: ' + fields.name + '\nFiles: ' + files.name);
-        }
-    });
-});
-
-app.post('/create', (req, res) => {
-    log(req, '/Create');
-
-    let _path = path.join('./Public/' + req.body.path + '/');
-    if (fs.existsSync(_path)) {
-        _path = path.join(_path + '/' + req.body.name)
+    try {
+        let _path = path.join('./Public/' + req.body.name + '/');
         if (!fs.existsSync(_path)) {
             fs.mkdirSync(_path);
             res.status(201);
@@ -110,68 +37,163 @@ app.post('/create', (req, res) => {
             res.status(200);
             res.json({ exists: true, create: false });
         }
-    } else {
-        res.status(404);
-        res.json({ exists: false, create: false });
+    } catch (err) {
+        console.log('[ ERROR ] Server crash !! (Might problem in POST)');
+    }
+});
+
+app.post('/list', (req, res) => {
+    log(req, '/List');
+    try {
+        let _path = path.join('./Public/' + req.body.path + '/');
+        let body = {
+            exists: true,
+            folders: [],
+            files: []
+        };
+        if (fs.existsSync(_path)) {
+            let files = fs.readdirSync(_path);
+            for (let i = 0; i < files.length; i++) {
+                if (fs.lstatSync(_path + '/' + files[i]).isDirectory()) {
+                    body.folders.push(files[i]);
+                } else {
+                    body.files.push(files[i]);
+                }
+            }
+            res.status(200);
+            res.json(body);
+        } else {
+            res.status(404);
+            res.json({ exists: false });
+        }
+    } catch (err) {
+        console.log('[ ERROR ] Server crash !! (Might problem in POST)');
+    }
+});
+
+app.post('/upload', (req, res) => {
+    log(req, '/Upload');
+    try {
+        var form = new multiparty.Form();
+        form.parse(req, function (err, fields, files) {
+            try {
+                let oldPath = files.file[0].path;
+                let newPath = path.join('./Public/' + fields.path[0] + '/');
+                if (fs.existsSync(newPath)) {
+                    newPath = path.join(newPath + '/' + files.file[0].originalFilename);
+                    if (!fs.existsSync(newPath)) {
+                        fs.rename(oldPath, newPath, (err) => {
+                            if (err) throw err;
+                            res.status(201);
+                            res.json({ exists: false, create: true });
+                        });
+                    } else {
+                        res.status(200);
+                        res.json({ exists: true, create: false });
+                    }
+                } else {
+                    res.status(404);
+                    res.json({ exists: false });
+                }
+            } catch (err) {
+                console.log('\n' + err + '\nFields: ' + fields.name + '\nFiles: ' + files.name);
+            }
+        });
+    } catch (err) {
+        console.log('[ ERROR ] Server crash !! (Might problem in POST)');
+    }
+});
+
+app.post('/create', (req, res) => {
+    log(req, '/Create');
+    try {
+        let _path = path.join('./Public/' + req.body.path + '/');
+        if (fs.existsSync(_path)) {
+            _path = path.join(_path + '/' + req.body.name)
+            if (!fs.existsSync(_path)) {
+                fs.mkdirSync(_path);
+                res.status(201);
+                res.json({ exists: false, create: true });
+            } else {
+                res.status(200);
+                res.json({ exists: true, create: false });
+            }
+        } else {
+            res.status(404);
+            res.json({ exists: false, create: false });
+        }
+    } catch (err) {
+        console.log('[ ERROR ] Server crash !! (Might problem in POST)');
     }
 });
 
 app.post('/download', (req, res) => {
     log(req, '/Download');
-
-    let _path = path.join('./Public/' + req.body.path);
-    // DO NOT DELETE OR REMOVE :P
-    // let fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
-    let fullUrl = req.protocol + '://' + req.get('host') + '/Public' + req.body.path;
-    if (fs.existsSync(_path)) {
-        res.status(200);
-        res.json({ exists: true, file: fullUrl });
-    } else {
-        res.status(404);
-        res.json({ exists: false });
+    try {
+        let _path = path.join('./Public/' + req.body.path);
+        // DO NOT DELETE OR REMOVE :P
+        // let fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+        let fullUrl = req.protocol + '://' + req.get('host') + '/Public' + req.body.path;
+        if (fs.existsSync(_path)) {
+            res.status(200);
+            res.json({ exists: true, file: fullUrl });
+        } else {
+            res.status(404);
+            res.json({ exists: false });
+        }
+    } catch (err) {
+        console.log('[ ERROR ] Server crash !! (Might problem in POST)');
     }
 });
 
+app.use(express.static('Public'));
+
 app.post('/rename', (req, res) => {
     log(req, '/Rename');
-
-    let _path = path.join('./Public/' + req.body.path);
-    if (fs.existsSync(_path)) {
-        let splitPath = req.body.path.split('/');
-        splitPath[splitPath.length - 1] = req.body.name;
-        let newPath = './Public';
-        for (let i = 1; i < splitPath.length; i++) {
-            newPath += '/' + splitPath[i];
+    try {
+        let _path = path.join('./Public/' + req.body.path);
+        if (fs.existsSync(_path)) {
+            let splitPath = req.body.path.split('/');
+            splitPath[splitPath.length - 1] = req.body.name;
+            let newPath = './Public';
+            for (let i = 1; i < splitPath.length; i++) {
+                newPath += '/' + splitPath[i];
+            }
+            fs.rename(_path, newPath, (err) => {
+                if (err) throw err;
+                res.status(200);
+                res.json({ exists: true, rename: true });
+            });
+        } else {
+            res.status(404);
+            res.json({ exists: false, create: false });
         }
-        fs.rename(_path, newPath, (err) => {
-            if (err) throw err;
-            res.status(200);
-            res.json({ exists: true, rename: true });
-        });
-    } else {
-        res.status(404);
-        res.json({ exists: false, create: false });
+    } catch (err) {
+        console.log('[ ERROR ] Server crash !! (Might problem in POST)');
     }
 });
 
 app.post('/delete', (req, res) => {
     log(req, '/Delete');
+    try {
+        let _path = path.join('./Public/' + req.body.path);
+        let deleted = false;
 
-    let _path = path.join('./Public/' + req.body.path);
-    let deleted = false;
-
-    if (fs.existsSync(_path)) {
-        if (fs.lstatSync(_path).isDirectory()) {
-            deleted = removeRecursive(_path);
+        if (fs.existsSync(_path)) {
+            if (fs.lstatSync(_path).isDirectory()) {
+                deleted = removeRecursive(_path);
+            } else {
+                fs.unlinkSync(_path);
+                deleted = true;
+            }
+            res.status(200);
+            res.json({ exists: deleted, delete: deleted });
         } else {
-            fs.unlinkSync(_path);
-            deleted = true;
+            res.status(404);
+            res.json({ exists: deleted, delete: deleted });
         }
-        res.status(200);
-        res.json({ exists: deleted, delete: deleted });
-    } else {
-        res.status(404);
-        res.json({ exists: deleted, delete: deleted });
+    } catch (err) {
+        console.log('[ ERROR ] Server crash !! (Might problem in POST)');
     }
 });
 
