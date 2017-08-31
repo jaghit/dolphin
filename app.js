@@ -166,7 +166,7 @@ app.post('/rename', (req, res) => {
             });
         } else {
             res.status(404);
-            res.json({ exists: false, create: false });
+            res.json({ exists: false, rename: false });
         }
     } catch (err) {
         console.log('[ ERROR ] Server crash !! (Might problem in POST)');
