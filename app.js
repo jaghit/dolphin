@@ -20,9 +20,9 @@ function log(req, point) {
     let address = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     let log = '\n[ TIMESTAMP ] ' + timestamp + ' [ IP ADDRESS ] ' + address + ' [ ENDPOINT ] Incoming request to ' + point + ' \n[ USERAGENT ] ' + agent;
     console.log(log);
-    fs.appendFile('log.txt', log + '\n', function (err) {
-        if (err) throw err;
-    });
+    // fs.appendFile('log.txt', log + '\n', function (err) {
+    //     if (err) throw err;
+    // });
 }
 
 app.post('/new', (req, res) => {
@@ -215,5 +215,8 @@ function removeRecursive(path) {
 };
 
 app.listen(8080, () => {
+    if (!fs.existsSync('./Public')) {
+        fs.mkdirSync('./Public');
+    }
     console.log('CORS-enabled web server listening on port 8080!');
 })
